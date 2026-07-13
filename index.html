@@ -1,0 +1,406 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Flashcards</title>
+
+<style>
+
+:root{
+--bg:#F5F7FA;
+--card:#FFFFFF;
+--text:#222;
+}
+
+body{
+font-family:Arial,sans-serif;
+background:var(--bg);
+color:var(--text);
+margin:0;
+padding:20px;
+transition:.3s;
+}
+
+.container{
+max-width:850px;
+margin:auto;
+}
+
+h1{
+text-align:center;
+}
+
+.flashcard{
+background:var(--card);
+color:var(--text);
+min-height:250px;
+padding:30px;
+border-radius:20px;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+font-size:24px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 8px 20px rgba(0,0,0,.1);
+transition:.3s;
+}
+
+.flashcard:hover{
+transform:translateY(-3px);
+}
+
+.progress-container{
+margin:20px 0;
+}
+
+.progress-bar{
+height:12px;
+background:#ddd;
+border-radius:10px;
+overflow:hidden;
+}
+
+.progress-fill{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#4CAF50,#81C784);
+transition:.3s;
+}
+
+.progress-text{
+margin-bottom:8px;
+font-weight:bold;
+}
+
+.controls{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+margin-top:20px;
+}
+
+.btn{
+border:none;
+padding:14px 20px;
+border-radius:14px;
+cursor:pointer;
+font-size:15px;
+font-weight:bold;
+color:white;
+transition:.2s;
+}
+
+.btn:hover{
+transform:translateY(-2px);
+}
+
+.btn-prev{
+background:linear-gradient(135deg,#2563eb,#3b82f6);
+}
+
+.btn-next{
+background:linear-gradient(135deg,#059669,#10b981);
+}
+
+.btn-reset{
+background:linear-gradient(135deg,#dc2626,#ef4444);
+}
+
+.btn-shuffle{
+background:linear-gradient(135deg,#7c3aed,#a855f7);
+}
+
+.btn-theme{
+background:linear-gradient(135deg,#F59E0B,#FACC15);
+}
+
+@media(max-width:600px){
+.btn{
+width:100%;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🃏 Flashcards</h1>
+
+<div class="progress-container">
+
+<div class="progress-text">
+Carte <span id="current">1</span> /
+<span id="total">1</span>
+</div>
+
+<div class="progress-bar">
+<div class="progress-fill" id="progressFill"></div>
+</div>
+
+</div>
+
+<div class="flashcard" id="card" onclick="flipCard()">
+Cliquez pour commencer
+</div>
+
+<div class="controls">
+
+<button class="btn btn-prev" onclick="prevCard()">
+⬅️ Précédent
+</button>
+
+<button class="btn btn-next" onclick="nextCard()">
+➡️ Suivant
+</button>
+
+<button class="btn btn-shuffle" onclick="shuffleCards()">
+🎲 Mélanger
+</button>
+
+<button class="btn btn-reset" onclick="resetCards()">
+🔄 Réinitialiser
+</button>
+
+<button class="btn btn-theme" onclick="changeTheme()">
+🎨 Thème
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const cards = [
+
+{
+question:"Question 1",
+answer:"Réponse 1"
+},
+
+{
+question:"Question 2",
+answer:"Réponse 2"
+},
+
+{
+question:"Question 3",
+answer:"Réponse 3"
+}
+
+];
+
+let currentCard=0;
+let flipped=false;
+
+const themes=[
+
+{
+bg:"#F5F7FA",
+card:"#FFFFFF",
+text:"#222222"
+},
+
+{
+bg:"#121212",
+card:"#1E1E1E",
+text:"#FFFFFF"
+},
+
+{
+bg:"#E8F1FF",
+card:"#FFFFFF",
+text:"#0F172A"
+},
+
+{
+bg:"#ECFDF5",
+card:"#FFFFFF",
+text:"#064E3B"
+},
+
+{
+bg:"#FFF0F6",
+card:"#FFFFFF",
+text:"#7A284E"
+},
+
+{
+bg:"#F3EEFF",
+card:"#FFFFFF",
+text:"#58468C"
+},
+
+{
+bg:"#F6F1FF",
+card:"#FFFFFF",
+text:"#6750A4"
+},
+
+{
+bg:"#F0F9FF",
+card:"#FFFFFF",
+text:"#1E4E79"
+},
+
+{
+bg:"#FFFDF2",
+card:"#FFFFFF",
+text:"#8B6A00"
+}
+
+];
+
+let currentTheme=
+parseInt(localStorage.getItem("theme")) || 0;
+
+applyTheme();
+
+function applyTheme(){
+
+document.documentElement.style
+.setProperty("--bg",
+themes[currentTheme].bg);
+
+document.documentElement.style
+.setProperty("--card",
+themes[currentTheme].card);
+
+document.documentElement.style
+.setProperty("--text",
+themes[currentTheme].text);
+
+localStorage.setItem(
+"theme",
+currentTheme
+);
+
+}
+
+function changeTheme(){
+
+currentTheme++;
+
+if(currentTheme>=themes.length){
+currentTheme=0;
+}
+
+applyTheme();
+
+}
+
+function displayCard(){
+
+let card=cards[currentCard];
+
+document.getElementById("card")
+.textContent=
+flipped ?
+card.answer :
+card.question;
+
+updateProgress();
+
+}
+
+function flipCard(){
+
+flipped=!flipped;
+displayCard();
+
+}
+
+function nextCard(){
+
+if(currentCard<cards.length-1){
+currentCard++;
+}
+
+flipped=false;
+displayCard();
+
+}
+
+function prevCard(){
+
+if(currentCard>0){
+currentCard--;
+}
+
+flipped=false;
+displayCard();
+
+}
+
+function shuffleCards(){
+
+for(
+let i=cards.length-1;
+i>0;
+i--
+){
+
+const j=Math.floor(
+Math.random()*(i+1)
+);
+
+[cards[i],cards[j]]
+=
+[cards[j],cards[i]];
+
+}
+
+currentCard=0;
+flipped=false;
+
+displayCard();
+
+}
+
+function resetCards(){
+
+currentCard=0;
+flipped=false;
+
+displayCard();
+
+}
+
+function updateProgress(){
+
+document.getElementById(
+"current"
+).textContent=
+currentCard+1;
+
+document.getElementById(
+"total"
+).textContent=
+cards.length;
+
+let percent=
+((currentCard+1)
+/cards.length)*100;
+
+document.getElementById(
+"progressFill"
+).style.width=
+percent+"%";
+
+}
+
+displayCard();
+
+</script>
+
+</body>
+</html>
